@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Strava Extension Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🚴 Strava Extension Settings</h1>
+      <p>Configure auto-kudos and activity notifications</p>
+    </header>
+
+    <main>
+      <!-- Auto-Kudos Settings -->
+      <section class="card">
+        <h2>👍 Auto-Kudos Settings</h2>
+        
+        <div class="setting-item">
+          <div class="setting-info">
+            <label for="autoKudosEnabled">Enable Auto-Kudos</label>
+            <p class="description">Automatically give kudos to activities from athletes you follow</p>
+          </div>
+          <div class="toggle-switch">
+            <input type="checkbox" id="autoKudosEnabled">
+            <span class="slider"></span>
+          </div>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <label for="onlySignificant">Only Kudos Significant Activities</label>
+            <p class="description">Give kudos only to activities that match your notification rules</p>
+          </div>
+          <div class="toggle-switch">
+            <input type="checkbox" id="onlySignificant">
+            <span class="slider"></span>
+          </div>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <label for="dailyLimit">Daily Kudos Limit</label>
+            <p class="description">Maximum number of kudos to give per day</p>
+          </div>
+          <input type="number" id="dailyLimit" min="1" max="500" class="number-input">
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <label for="delayMs">Delay Between Kudos (milliseconds)</label>
+            <p class="description">Time to wait between giving kudos (appears more human-like)</p>
+          </div>
+          <input type="number" id="delayMs" min="500" max="10000" step="500" class="number-input">
+        </div>
+      </section>
+
+      <!-- Notification Settings -->
+      <section class="card">
+        <h2>🔔 Notification Settings</h2>
+        
+        <div class="setting-item">
+          <div class="setting-info">
+            <label for="notificationsEnabled">Enable Notifications</label>
+            <p class="description">Get push notifications on your phone about significant activities (requires Pushover)</p>
+          </div>
+          <div class="toggle-switch">
+            <input type="checkbox" id="notificationsEnabled">
+            <span class="slider"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pushover Settings -->
+      <section class="card">
+        <h2>📱 Pushover Push Notifications</h2>
+        <p class="section-description">Send push notifications to your phone via Pushover ($5 one-time per platform). <a href="https://pushover.net" target="_blank">Get Pushover →</a></p>
+        
+        <div class="setting-item">
+          <div class="setting-info">
+            <label for="pushoverEnabled">Enable Pushover</label>
+            <p class="description">Send notifications to your phone via Pushover</p>
+          </div>
+          <div class="toggle-switch">
+            <input type="checkbox" id="pushoverEnabled">
+            <span class="slider"></span>
+          </div>
+        </div>
+
+        <div id="pushoverSettings" style="display: none;">
+          <div class="setting-item">
+            <div class="setting-info">
+              <label for="pushoverUserKey">User Key</label>
+              <p class="description">Your Pushover user key (found on <a href="https://pushover.net" target="_blank">pushover.net</a> after login)</p>
+            </div>
+            <input type="text" id="pushoverUserKey" placeholder="e.g., uQiRzpo4DXghDmr9QzzfQu27cmVRsG" class="text-input">
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label for="pushoverAppToken">Application Token</label>
+              <p class="description">Create an application at pushover.net/apps/build and paste the token here</p>
+            </div>
+            <input type="text" id="pushoverAppToken" placeholder="e.g., azGDORePK8gMaC0QOYAMyEEuzJnyUi" class="text-input">
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <label for="pushoverMinPriority">Minimum Priority for Push</label>
+              <p class="description">Only send push notifications for activities at or above this priority</p>
+            </div>
+            <select id="pushoverMinPriority" class="select-input">
+              <option value="low">Low (all notifications)</option>
+              <option value="medium">Medium</option>
+              <option value="high">High (recommended)</option>
+              <option value="critical">Critical only</option>
+            </select>
+          </div>
+
+          <button id="testPushoverBtn" class="btn btn-secondary">📱 Test Pushover</button>
+          <span id="pushoverTestResult" class="test-result"></span>
+        </div>
+      </section>
+
+      <!-- Auto-Refresh Settings -->
+      <section class="card">
+        <h2>🔄 Auto-Refresh Dashboard</h2>
+        <p class="section-description">Automatically refresh the Strava dashboard to check for new activities</p>
+        
+        <div class="setting-item">
+          <div class="setting-info">
+            <label for="autoRefreshEnabled">Enable Auto-Refresh</label>
+            <p class="description">Automatically reload the dashboard page at regular intervals</p>
+          </div>
+          <div class="toggle-switch">
+            <input type="checkbox" id="autoRefreshEnabled">
+            <span class="slider"></span>
+          </div>
+        </div>
+
+        <div id="autoRefreshSettings" style="display: none;">
+          <div class="setting-item">
+            <div class="setting-info">
+              <label for="autoRefreshInterval">Refresh Interval (minutes)</label>
+              <p class="description">How often to refresh the dashboard (1-60 minutes)</p>
+            </div>
+            <input type="number" id="autoRefreshInterval" min="1" max="60" value="5" class="number-input">
+          </div>
+          <div class="setting-info-box">
+            <p>💡 <strong>Tip:</strong> A 5-10 minute interval is recommended. The page will refresh smoothly without interrupting your browsing.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Preset Templates -->
+      <section class="card">
+        <h2>📋 Notification Presets</h2>
+        <p class="section-description">Choose a preset or create custom rules below</p>
+
+        <div class="preset-grid" id="presetGrid">
+          <!-- Presets will be added dynamically -->
+        </div>
+
+        <div id="presetRulesDetail" style="display: none; margin-top: 24px;">
+          <h3 style="margin-bottom: 12px; font-size: 16px; font-weight: 600;">Included Rules:</h3>
+          <div id="presetRulesList"></div>
+        </div>
+      </section>
+
+      <!-- Custom Rules -->
+      <section class="card">
+        <h2>⚙️ Custom Rules</h2>
+        <p class="section-description">Create your own notification rules</p>
+        
+        <div id="customRulesList">
+          <!-- Rules will be added dynamically -->
+        </div>
+        
+        <button id="addRuleBtn" class="btn btn-secondary">+ Add Custom Rule</button>
+      </section>
+
+      <!-- VIP Athletes -->
+      <section class="card">
+        <h2>⭐ VIP Athletes</h2>
+        <p class="section-description">Get notified about all activities from these athletes</p>
+        
+        <div class="vip-input-group">
+          <input type="text" id="vipAthleteName" placeholder="Athlete name" class="text-input">
+          <input type="text" id="vipAthleteId" placeholder="Athlete ID (optional)" class="text-input">
+          <button id="addVipBtn" class="btn btn-primary">Add VIP</button>
+        </div>
+        
+        <div id="vipList" class="vip-list">
+          <!-- VIP athletes will be added dynamically -->
+        </div>
+      </section>
+
+      <!-- Stats -->
+      <section class="card">
+        <h2>📊 Statistics</h2>
+        
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="totalKudos">0</div>
+            <div class="stat-label">Total Kudos Given</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="totalNotifications">0</div>
+            <div class="stat-label">Total Notifications</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="activitiesProcessed">0</div>
+            <div class="stat-label">Activities Processed</div>
+          </div>
+        </div>
+        
+        <button id="resetStatsBtn" class="btn btn-danger">Reset Statistics</button>
+      </section>
+    </main>
+
+    <footer>
+      <button id="saveBtn" class="btn btn-primary btn-large">💾 Save Settings</button>
+      <p class="save-status" id="saveStatus"></p>
+    </footer>
+  </div>
+
+  <!-- Rule Builder Modal -->
+  <div id="ruleModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Create Custom Rule</h3>
+        <span class="close">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Activity Type</label>
+          <select id="ruleType" class="select-input">
+            <option value="any">Any Activity</option>
+            <option value="ride">Ride (includes virtual)</option>
+            <option value="virtualride">Virtual Ride Only</option>
+            <option value="run">Run</option>
+            <option value="swim">Swim</option>
+            <option value="walk">Walk</option>
+            <option value="hike">Hike</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Condition</label>
+          <select id="ruleCondition" class="select-input">
+            <option value="">None (match all)</option>
+            <option value="distance">Distance</option>
+            <option value="speed">Speed</option>
+            <option value="pace">Pace</option>
+            <option value="elevation">Elevation Gain</option>
+            <option value="moving-time">Moving Time</option>
+            <option value="comments">Comments</option>
+          </select>
+        </div>
+
+        <div id="conditionInputs" style="display: none;">
+          <div class="form-group">
+            <label>Operator</label>
+            <select id="ruleOperator" class="select-input">
+              <option value=">">Greater than (>)</option>
+              <option value=">=">Greater than or equal (≥)</option>
+              <option value="<">Less than (<)</option>
+              <option value="<=">Less than or equal (≤)</option>
+              <option value="=">Equal to (=)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Value</label>
+            <input type="number" id="ruleValue" class="number-input" step="0.1">
+          </div>
+
+          <div class="form-group">
+            <label>Unit</label>
+            <select id="ruleUnit" class="select-input">
+              <!-- Options will be populated based on condition -->
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Priority</label>
+          <select id="rulePriority" class="select-input">
+            <option value="critical">Critical (🔥)</option>
+            <option value="high">High (⚡)</option>
+            <option value="medium">Medium (✨)</option>
+            <option value="low">Low (👍)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="cancelRuleBtn" class="btn btn-secondary">Cancel</button>
+        <button id="saveRuleBtn" class="btn btn-primary">Save Rule</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+/* Styles for UI enhancements */
+
+.strava-ext-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-right: 8px;
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.strava-ext-priority-critical {
+  background: linear-gradient(135deg, #fc4c02 0%, #ff6b35 100%);
+  color: white;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.strava-ext-priority-high {
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  color: white;
+}
+
+.strava-ext-priority-medium {
+  background: linear-gradient(135deg, #f7931e 0%, #ffd700 100%);
+  color: #333;
+}
+
+.strava-ext-priority-low {
+  background: linear-gradient(135deg, #4a90e2 0%, #67b3ff 100%);
+  color: white;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 2px 4px rgba(252, 76, 2, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 12px rgba(252, 76, 2, 0.6);
+  }
+}
+
+.strava-ext-highlight {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.strava-ext-highlight::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border-radius: 8px;
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.strava-ext-highlight-critical::before {
+  background: linear-gradient(135deg, #fc4c02 0%, #ff6b35 100%);
+  box-shadow: 0 0 20px rgba(252, 76, 2, 0.5);
+  animation: glow 2s ease-in-out infinite;
+}
+
+.strava-ext-highlight-high::before {
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  box-shadow: 0 0 15px rgba(255, 107, 53, 0.4);
+}
+
+@keyframes glow {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.strava-ext-kudos-indicator {
+  margin-left: 4px;
+  animation: bounceIn 0.4s ease-out;
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Activity card hover effect */
+.strava-ext-highlight:hover {
+  transform: translateY(-2px);
+  transition: transform 0.2s ease;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .strava-ext-badge {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+}

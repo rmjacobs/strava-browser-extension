@@ -1,0 +1,17 @@
+# Icon Placeholders Created
+# 
+# For production, you should replace these with actual PNG icons.
+# You can create icons using:
+# 1. Figma/Sketch/Photoshop
+# 2. Online icon generators
+# 3. SVG to PNG converters
+#
+# Icon sizes needed:
+# - icon16.png (16x16)
+# - icon48.png (48x48) 
+# - icon128.png (128x128)
+#
+# Recommended design:
+# - Orange/red gradient background (#fc4c02 to #ff6b35)
+# - White bicycle or activity icon
+# - Simple, recognizable at small sizes

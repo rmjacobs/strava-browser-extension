@@ -1,0 +1,47 @@
+{
+  "manifest_version": 3,
+  "name": "Strava Activity Notifier & Auto-Kudos",
+  "version": "1.0.0",
+  "description": "Auto-kudos athletes you follow and get notified about significant activities",
+  "permissions": [
+    "storage",
+    "notifications",
+    "alarms"
+  ],
+  "host_permissions": [
+    "https://www.strava.com/*",
+    "https://api.pushover.net/*"
+  ],
+  "background": {
+    "service_worker": "background/service-worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.strava.com/dashboard*"],
+      "js": [
+        "utils/storage.js",
+        "utils/activity-parser.js",
+        "utils/rule-engine.js",
+        "content-scripts/feed-monitor.js",
+        "content-scripts/auto-kudos.js",
+        "content-scripts/ui-enhancer.js"
+      ],
+      "css": ["content-scripts/styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "options_page": "options/options.html",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

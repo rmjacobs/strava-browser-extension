@@ -1,0 +1,29 @@
+REQUIRED ICONS FOR BROWSER EXTENSION
+=====================================
+
+You need to create 3 PNG icon files:
+
+1. icon16.png (16x16 pixels)
+2. icon48.png (48x48 pixels)
+3. icon128.png (128x128 pixels)
+
+DESIGN SUGGESTIONS:
+- Use Strava's orange color (#fc4c02)
+- Simple, recognizable bicycle or running person silhouette
+- Works well at small sizes
+- Clean, modern design
+
+TOOLS TO CREATE ICONS:
+1. Online: https://www.favicon-generator.org/
+2. Figma: Free design tool
+3. Canva: Easy icon creator
+4. GIMP: Free image editor
+
+QUICK PLACEHOLDER OPTION:
+You can temporarily use text-based emojis:
+- 🚴 (bicycle)
+- 🏃 (runner)
+- ⚡ (lightning bolt)
+
+Convert emoji to PNG using online tools, then resize to needed dimensions.
+

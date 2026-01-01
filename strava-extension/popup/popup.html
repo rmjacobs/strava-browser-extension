@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Strava Extension</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <header>
+      <h1>🚴 Strava Extension</h1>
+    </header>
+
+    <section class="status">
+      <div class="status-item">
+        <label>Auto-Kudos</label>
+        <div class="toggle-switch">
+          <input type="checkbox" id="autoKudosToggle">
+          <span class="slider"></span>
+        </div>
+      </div>
+      
+      <div class="status-item">
+        <label>Notifications</label>
+        <div class="toggle-switch">
+          <input type="checkbox" id="notificationsToggle">
+          <span class="slider"></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="stats">
+      <h3>Today's Stats</h3>
+      <div class="stat-grid">
+        <div class="stat-item">
+          <div class="stat-value" id="kudosCount">0</div>
+          <div class="stat-label">Kudos Given</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="notificationCount">0</div>
+          <div class="stat-label">Notifications</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="preset">
+      <h3>Notification Preset</h3>
+      <select id="presetSelect">
+        <option value="prs-only">🏆 Don't Miss PRs</option>
+        <option value="impressive-efforts">⚡ Impressive Efforts</option>
+        <option value="epic-adventures">🔥 Epic Adventures</option>
+        <option value="everything">📢 Everything</option>
+      </select>
+      <div id="presetDescription" class="preset-description"></div>
+    </section>
+
+    <section class="quick-actions">
+      <button id="openReviewQueue" class="btn btn-primary">
+        📋 Review Queue <span id="queueCountBadge" class="badge"></span>
+      </button>
+      <button id="openOptions" class="btn btn-secondary">
+        ⚙️ Settings
+      </button>
+      <button id="openStrava" class="btn btn-secondary">
+        🔗 Open Strava
+      </button>
+    </section>
+
+    <footer>
+      <p class="version">v1.0.0</p>
+    </footer>
+  </div>
+
+  <script src="../utils/storage.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Review Queue - Strava Extension</title>
+  <link rel="stylesheet" href="review-queue.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📋 Activity Review Queue</h1>
+      <p>Significant activities waiting for your attention</p>
+    </header>
+
+    <main>
+      <section class="card">
+        <div class="queue-header">
+          <div class="queue-stats">
+            <span id="queueCount" class="count-badge">0</span>
+            <span class="count-label">activities to review</span>
+          </div>
+
+          <div class="queue-actions">
+            <label class="select-all-checkbox">
+              <input type="checkbox" id="selectAllCheckbox">
+              <span>Select All</span>
+            </label>
+
+            <select id="priorityFilter" class="filter-select">
+              <option value="all">All Priorities</option>
+              <option value="critical">Critical Only</option>
+              <option value="high">High & Above</option>
+              <option value="medium">Medium & Above</option>
+            </select>
+
+            <button id="clearReviewedBtn" class="btn btn-secondary">
+              🗑️ Clear Reviewed
+            </button>
+
+            <button id="exportBtn" class="btn btn-secondary">
+              📄 Export
+            </button>
+          </div>
+        </div>
+
+        <div id="queueList" class="queue-list">
+          <!-- Queue items will be added dynamically -->
+        </div>
+
+        <div id="emptyState" class="empty-state" style="display: none;">
+          <div class="empty-icon">✨</div>
+          <h3>All caught up!</h3>
+          <p>No activities in your review queue.</p>
+          <p class="empty-hint">Significant activities will appear here automatically.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <button id="backBtn" class="btn btn-secondary">← Back to Popup</button>
+    </footer>
+  </div>
+
+  <script src="../utils/storage.js"></script>
+  <script src="../utils/rule-engine.js"></script>
+  <script src="review-queue.js"></script>
+</body>
+</html>
