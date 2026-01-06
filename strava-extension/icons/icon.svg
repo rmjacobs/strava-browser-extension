@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- Strava Orange Background -->
+  <circle cx="64" cy="64" r="60" fill="#FC4C02"/>
+
+  <!-- Large Bold S -->
+  <text x="64" y="74" font-family="Arial, sans-serif" font-size="72" font-weight="bold"
+        fill="white" text-anchor="middle" dominant-baseline="middle">S</text>
+
+  <!-- Notification badge with number 42 -->
+  <g transform="translate(94, 34)">
+    <circle cx="0" cy="0" r="18" fill="white"/>
+    <text x="0" y="0" font-family="Arial, sans-serif" font-size="16" font-weight="bold"
+          fill="#FC4C02" text-anchor="middle" dominant-baseline="middle">42</text>
+  </g>
+</svg>
