@@ -110,7 +110,20 @@ chrome.storage.local.get('settings', (result) => {
   }
 });
 
-// Show Pushover notification only
+// Priority level mapping for comparison
+const PRIORITY_LEVELS = {
+  'low': 1,
+  'medium': 2,
+  'high': 3,
+  'critical': 4
+};
+
+// Check if activity priority meets provider's minimum priority threshold
+function meetsMinPriority(activityPriority, minPriority) {
+  return PRIORITY_LEVELS[activityPriority] >= PRIORITY_LEVELS[minPriority];
+}
+
+// Send notifications to all enabled providers
 async function showNotification(data) {
   const { title, message, activityId, priority } = data;
 
@@ -125,25 +138,89 @@ async function showNotification(data) {
     return;
   }
 
-  // Only Pushover notifications now
-  if (settings.notifications.pushover && settings.notifications.pushover.enabled) {
-    console.log('[Service Worker] Sending Pushover notification');
-    await sendPushoverNotification(settings.notifications.pushover, title, message, priority, activityId);
-  } else {
-    console.log('[Service Worker] Pushover not configured, skipping notification');
+  const providers = settings.notifications.providers;
+
+  if (!providers) {
+    console.log('[Service Worker] No providers configured');
+    return;
   }
+
+  // Collect all notification promises
+  const notificationPromises = [];
+
+  // Pushover
+  if (providers.pushover && providers.pushover.enabled) {
+    if (meetsMinPriority(priority, providers.pushover.minPriority)) {
+      console.log('[Service Worker] Sending to Pushover (priority check passed)');
+      notificationPromises.push(
+        sendPushoverNotification(providers.pushover, title, message, priority, activityId)
+      );
+    } else {
+      console.log('[Service Worker] Skipping Pushover (priority too low)');
+    }
+  }
+
+  // Webhooks (Discord, Slack, Generic)
+  if (providers.webhooks && Array.isArray(providers.webhooks)) {
+    providers.webhooks.forEach((webhook) => {
+      if (!webhook.enabled) {
+        console.log(`[Service Worker] Skipping ${webhook.name} (disabled)`);
+        return;
+      }
+
+      if (!meetsMinPriority(priority, webhook.minPriority)) {
+        console.log(`[Service Worker] Skipping ${webhook.name} (priority too low)`);
+        return;
+      }
+
+      console.log(`[Service Worker] Sending to ${webhook.name} (${webhook.format}) (priority check passed)`);
+
+      // Route to appropriate function based on format
+      if (webhook.format === 'discord') {
+        notificationPromises.push(
+          sendDiscordNotification(webhook, title, message, priority, activityId)
+        );
+      } else if (webhook.format === 'slack') {
+        notificationPromises.push(
+          sendSlackNotification(webhook, title, message, priority, activityId)
+        );
+      } else if (webhook.format === 'generic') {
+        notificationPromises.push(
+          sendGenericWebhookNotification(webhook, title, message, priority, activityId)
+        );
+      } else {
+        console.warn(`[Service Worker] Unknown webhook format: ${webhook.format}`);
+      }
+    });
+  }
+
+  if (notificationPromises.length === 0) {
+    console.log('[Service Worker] No providers enabled or priority thresholds not met');
+    return;
+  }
+
+  // Send to all providers in parallel, don't let one failure block others
+  console.log(`[Service Worker] Sending to ${notificationPromises.length} provider(s)`);
+  const results = await Promise.allSettled(notificationPromises);
+
+  // Log any failures
+  results.forEach((result, index) => {
+    if (result.status === 'rejected') {
+      console.error(`[Service Worker] Provider ${index} failed:`, result.reason);
+    }
+  });
 }
 
 async function sendPushoverNotification(pushoverConfig, title, message, priority, activityId) {
   const { userKey, appToken } = pushoverConfig;
-  
+
   console.log('[Service Worker] Sending Pushover notification');
-  
+
   if (!userKey || !appToken) {
     console.log('[Service Worker] Pushover not configured (missing credentials), skipping');
     return;
   }
-  
+
   // Map priority to Pushover priority (-2 to 2)
   let pushoverPriority = 0; // Normal
   if (priority === 'critical') {
@@ -174,9 +251,9 @@ async function sendPushoverNotification(pushoverConfig, title, message, priority
         url_title: 'View Activity'
       })
     });
-    
+
     const data = await response.json();
-    
+
     if (data.status === 1) {
       console.log('[Service Worker] Pushover notification sent successfully');
     } else {
@@ -184,6 +261,162 @@ async function sendPushoverNotification(pushoverConfig, title, message, priority
     }
   } catch (error) {
     console.error('[Service Worker] Failed to send Pushover notification:', error);
+  }
+}
+
+async function sendDiscordNotification(webhook, title, message, priority, activityId) {
+  const { url } = webhook;
+
+  console.log('[Service Worker] Sending Discord notification');
+
+  if (!url) {
+    console.log('[Service Worker] Discord not configured (missing webhook URL), skipping');
+    return;
+  }
+
+  // Map priority to Discord embed color
+  let color = 0x3498db; // Blue for low/medium
+  if (priority === 'critical') {
+    color = 0xe74c3c; // Red
+  } else if (priority === 'high') {
+    color = 0xf39c12; // Orange
+  } else if (priority === 'medium') {
+    color = 0xf1c40f; // Yellow
+  }
+
+  // Activity icon based on priority
+  const icon = priority === 'critical' ? '🔥' : priority === 'high' ? '⚡' : '🎯';
+
+  // Construct activity URL
+  const activityUrl = `https://www.strava.com/activities/${activityId}`;
+
+  console.log('[Service Worker] Sending Discord notification:', { title, priority, color, url: activityUrl });
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        embeds: [{
+          title: `${icon} ${title}`,
+          description: message,
+          color: color,
+          url: activityUrl,
+          timestamp: new Date().toISOString()
+        }]
+      })
+    });
+
+    if (response.ok) {
+      console.log('[Service Worker] Discord notification sent successfully');
+    } else {
+      const errorText = await response.text();
+      console.error('[Service Worker] Discord error:', response.status, errorText);
+    }
+  } catch (error) {
+    console.error('[Service Worker] Failed to send Discord notification:', error);
+  }
+}
+
+async function sendSlackNotification(webhook, title, message, priority, activityId) {
+  const { url } = webhook;
+
+  console.log('[Service Worker] Sending Slack notification');
+
+  if (!url) {
+    console.log('[Service Worker] Slack not configured (missing webhook URL), skipping');
+    return;
+  }
+
+  // Map priority to Slack color
+  let color = '#3498db'; // Blue for low/medium
+  if (priority === 'critical') {
+    color = '#e74c3c'; // Red
+  } else if (priority === 'high') {
+    color = '#f39c12'; // Orange
+  } else if (priority === 'medium') {
+    color = '#f1c40f'; // Yellow
+  }
+
+  // Activity icon based on priority
+  const icon = priority === 'critical' ? ':fire:' : priority === 'high' ? ':zap:' : ':dart:';
+
+  // Construct activity URL
+  const activityUrl = `https://www.strava.com/activities/${activityId}`;
+
+  console.log('[Service Worker] Sending Slack notification:', { title, priority, color, url: activityUrl });
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        attachments: [{
+          color: color,
+          title: `${icon} ${title}`,
+          text: message,
+          title_link: activityUrl,
+          footer: 'Strava Activity Monitor',
+          ts: Math.floor(Date.now() / 1000)
+        }]
+      })
+    });
+
+    if (response.ok) {
+      console.log('[Service Worker] Slack notification sent successfully');
+    } else {
+      const errorText = await response.text();
+      console.error('[Service Worker] Slack error:', response.status, errorText);
+    }
+  } catch (error) {
+    console.error('[Service Worker] Failed to send Slack notification:', error);
+  }
+}
+
+async function sendGenericWebhookNotification(webhook, title, message, priority, activityId) {
+  const { url, method, headers } = webhook;
+
+  console.log('[Service Worker] Sending Generic Webhook notification');
+
+  if (!url) {
+    console.log('[Service Worker] Generic Webhook not configured (missing URL), skipping');
+    return;
+  }
+
+  // Construct activity URL
+  const activityUrl = `https://www.strava.com/activities/${activityId}`;
+
+  // Payload with all activity data
+  const payload = {
+    title: title,
+    message: message,
+    priority: priority,
+    activityId: activityId,
+    activityUrl: activityUrl,
+    timestamp: new Date().toISOString()
+  };
+
+  console.log('[Service Worker] Sending Generic Webhook notification:', { url, method, priority });
+
+  try {
+    const response = await fetch(url, {
+      method: method || 'POST',
+      headers: headers || { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (response.ok) {
+      console.log('[Service Worker] Generic Webhook notification sent successfully');
+    } else {
+      const errorText = await response.text();
+      console.error('[Service Worker] Generic Webhook error:', response.status, errorText);
+    }
+  } catch (error) {
+    console.error('[Service Worker] Failed to send Generic Webhook notification:', error);
   }
 }
 

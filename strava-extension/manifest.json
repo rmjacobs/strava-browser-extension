@@ -10,7 +10,11 @@
   ],
   "host_permissions": [
     "https://www.strava.com/*",
-    "https://api.pushover.net/*"
+    "https://api.pushover.net/*",
+    "https://discord.com/*",
+    "https://hooks.slack.com/*",
+    "https://*/*",
+    "http://*/*"
   ],
   "background": {
     "service_worker": "background/service-worker.js"

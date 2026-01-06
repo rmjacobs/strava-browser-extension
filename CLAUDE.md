@@ -36,9 +36,9 @@ npm install
 
 **background/service-worker.js** - Background service worker that:
 - Handles Chrome alarms for cleanup and auto-refresh
-- Creates desktop notifications via Chrome API
-- Sends push notifications via Pushover API
+- Sends notifications to multiple providers (Pushover, Discord, Slack, Generic Webhook)
 - Manages settings updates and storage
+- Handles provider-specific notification formatting and delivery
 
 **utils/** - Shared utilities loaded into content script context:
 - `storage.js` - StorageManager handles all Chrome storage operations, default settings, and notification presets
@@ -52,14 +52,14 @@ npm install
 
 **popup/** - Extension popup UI (quick toggles, stats, preset selector)
 
-**options/** - Full settings page (rules, VIP athletes, Pushover config)
+**options/** - Full settings page (rules, VIP athletes, notification provider configuration)
 
 ### Data Flow
 
 1. **Activity Detection**: FeedMonitor scans DOM using `[data-testid="web-feed-entry"]` selector
 2. **Parsing**: ActivityParser extracts metrics (distance, pace, elevation, time) from activity card DOM
 3. **Evaluation**: RuleEngine evaluates against active preset rules + custom rules + VIP status
-4. **Notification**: If significant, service worker creates desktop notification and/or Pushover notification
+4. **Notification**: If significant, service worker sends notifications to all enabled providers (Pushover, Discord, Slack, Generic Webhook) that meet their minimum priority threshold
 5. **Auto-Kudos**: If enabled, AutoKudos clicks kudos button with delay (2s default + random jitter)
 
 ### Key Concepts
@@ -109,7 +109,17 @@ All data stored in `chrome.storage.local` under a single `settings` key containi
 ```javascript
 {
   autoKudos: { enabled, onlySignificant, excludedAthletes, dailyLimit, delayMs },
-  notifications: { enabled, preset, customRules, sound, desktop, pushover: {...} },
+  notifications: {
+    enabled,
+    preset,
+    customRules,
+    providers: {
+      pushover: { enabled, minPriority, userKey, appToken },
+      discord: { enabled, minPriority, webhookUrl },
+      slack: { enabled, minPriority, webhookUrl },
+      genericWebhook: { enabled, minPriority, url, method, headers }
+    }
+  },
   autoRefresh: { enabled, intervalMinutes },
   vipAthletes: [...],
   processedActivities: [{ id, timestamp }, ...],
@@ -123,12 +133,54 @@ Content scripts communicate via:
 - Custom DOM events: `stravaActivityDetected` dispatched when new activity found
 - Chrome runtime messages: `showNotification`, `getSettings`, `updateSettings`
 
-### Pushover Integration
+### Notification Providers
 
-When notifications are enabled and Pushover is configured:
-- All significant activities trigger both desktop AND Pushover notifications
-- Priority mapping: low/medium → 0 (normal), high → 1 (high), critical → 2 (emergency)
-- Emergency notifications require acknowledgment on phone
+The extension supports multiple notification providers that can be enabled simultaneously. Each provider has its own minimum priority threshold, allowing fine-grained control over which activities trigger notifications to which services.
+
+**Multiple Provider Support**:
+- Users can enable multiple providers at once (e.g., Discord + Pushover + Slack)
+- Each provider independently checks if the activity priority meets its minimum threshold
+- Notifications are sent in parallel using `Promise.allSettled()` to prevent one failure from blocking others
+- Priority comparison: low (1) < medium (2) < high (3) < critical (4)
+
+**Available Providers**:
+
+1. **Pushover** - Mobile push notifications ($5 one-time purchase per platform)
+   - Configuration: userKey, appToken, minPriority
+   - Priority mapping: low/medium → 0 (normal), high → 1 (high priority), critical → 2 (emergency, requires acknowledgment)
+   - Notifications include clickable activity URL
+
+2. **Discord** - Rich embeds to Discord channels via webhooks
+   - Configuration: webhookUrl, minPriority
+   - Rich formatting with color-coded embeds: blue (low), yellow (medium), orange (high), red (critical)
+   - Includes activity emoji indicators: 🎯 (low/medium), ⚡ (high), 🔥 (critical)
+   - Clickable embed title links to activity
+
+3. **Slack** - Formatted messages to Slack channels via webhooks
+   - Configuration: webhookUrl, minPriority
+   - Color-coded attachments matching Discord's scheme
+   - Emoji indicators in title: :dart:, :zap:, :fire:
+   - Clickable title links to activity
+
+4. **Generic Webhook** - POST JSON to any custom endpoint
+   - Configuration: url, method (POST/PUT/PATCH), minPriority, headers
+   - Standard JSON payload format:
+     ```json
+     {
+       "title": "Activity Title",
+       "message": "Activity details",
+       "priority": "high",
+       "activityId": "12345",
+       "activityUrl": "https://strava.com/activities/12345",
+       "timestamp": "2024-01-01T00:00:00.000Z"
+     }
+     ```
+   - Useful for custom integrations, IFTTT, Zapier, n8n, etc.
+
+**Provider Migration**:
+- Old Pushover-only configurations are automatically migrated to the new `providers` structure
+- Migration happens in `StorageManager.migrateNotificationSettings()` on first load
+- Original Pushover settings are preserved and moved to `notifications.providers.pushover`
 
 ## Testing Changes
 

@@ -1,10 +1,10 @@
 # Strava Activity Notifier & Auto-Kudos Extension
 
-A Chrome browser extension that automatically gives kudos to activities from athletes you follow and sends push notifications about significant activities to your phone.
+A Chrome browser extension that automatically gives kudos to activities from athletes you follow and sends notifications about significant activities to multiple platforms.
 
 **Key Features:**
 - 🎯 Auto-kudos with smart filtering
-- 📱 Push notifications via Pushover (clickable activity links)
+- 📱 Multi-provider notifications (Pushover, Discord, Slack, Generic Webhook)
 - 📋 Review Queue for batch activity review
 - ⭐ VIP athlete tracking (get notified for ALL their activities)
 - 🎨 Flexible rule engine with presets
@@ -21,12 +21,13 @@ A Chrome browser extension that automatically gives kudos to activities from ath
 - **Group activity support**: Handles activities with multiple participants
 
 ### 🔔 Smart Notifications
-- **Push notifications**: Pushover integration for phone notifications with clickable activity links
+- **Multiple providers**: Send notifications to Pushover (mobile), Discord, Slack, or custom webhooks
+- **Independent configuration**: Each provider has its own priority threshold for fine-grained control
 - **Priority system**: 4-level priority system (Low, Medium, High, Critical)
 - **Custom rules**: Create your own notification rules based on activity metrics
 - **Preset templates**: Choose from pre-built notification presets with detailed rule information
 - **VIP athletes**: Get notified about ALL activities from specific athletes (any activity type)
-- **Enhanced formatting**: Notifications include athlete name, activity type, stats, and direct links
+- **Rich formatting**: Provider-specific formatting with colors, emojis, and clickable activity links
 
 ### 📋 Review Queue
 - **Batch review workflow**: Significant activities collected in a dedicated review queue
@@ -72,14 +73,15 @@ A Chrome browser extension that automatically gives kudos to activities from ath
 2. Click "⚙️ Settings" to configure
 3. Enable Auto-Kudos if you want automatic kudos
 4. Enable Notifications and configure your preset (or create custom rules)
-5. **Set up Pushover** for phone notifications (required for notifications to work)
-   - Create account at pushover.net
-   - Purchase Pushover app ($5 one-time)
-   - Add your User Key and App Token in settings
+5. **Configure notification providers** (choose one or more):
+   - **Pushover**: Mobile push notifications ($5 one-time) - requires User Key and App Token from pushover.net
+   - **Discord**: Rich embeds in Discord channels - requires webhook URL from server settings
+   - **Slack**: Formatted messages in Slack channels - requires webhook URL from workspace settings
+   - **Generic Webhook**: Send JSON to any custom endpoint - requires webhook URL
 6. (Optional) Add VIP athletes for guaranteed notifications
 7. Save your settings and return to Strava dashboard
 
-**Alternative to notifications:** If you don't want to use Pushover, you can still use the **Review Queue** feature - it collects significant activities for batch review without sending notifications.
+**No notification providers?** You can still use the **Review Queue** feature - it collects significant activities for batch review without sending notifications.
 
 ## Usage
 
@@ -88,7 +90,7 @@ A Chrome browser extension that automatically gives kudos to activities from ath
 2. The extension automatically monitors your feed
 3. New activities are detected every 30 seconds
 4. Kudos are given automatically based on your settings
-5. Push notifications sent to your phone for significant activities (if Pushover configured)
+5. Notifications sent to configured providers for significant activities (Pushover, Discord, Slack, etc.)
 6. Significant activities collected in Review Queue for batch review
 
 ### Quick Controls (Popup)
@@ -104,7 +106,7 @@ Click the extension icon to access:
 Right-click the extension icon → "Options" or click "⚙️ Settings" in popup to access:
 - Complete auto-kudos configuration
 - Notification settings and rules
-- Pushover integration
+- Multi-provider notification configuration (Pushover, Discord, Slack, Generic Webhook)
 - VIP athlete management
 - Statistics and diagnostics
 
@@ -128,9 +130,13 @@ Right-click the extension icon → "Options" or click "⚙️ Settings" in popup
 | Custom Rules | Add your own notification rules | (empty) |
 | VIP Athletes | Athletes who trigger notifications for all activities | (empty) |
 
-### Pushover Integration
+### Notification Providers
 
-Pushover enables push notifications to your phone ($5 one-time per platform).
+The extension supports multiple notification providers that can be enabled simultaneously. Each provider has its own minimum priority threshold, allowing you to send all activities to Discord but only critical ones to your phone, for example.
+
+#### 📱 Pushover (Mobile Push Notifications)
+
+Push notifications to your iOS/Android device ($5 one-time per platform).
 
 **Setup Steps:**
 1. Create account at [pushover.net](https://pushover.net)
@@ -140,19 +146,76 @@ Pushover enables push notifications to your phone ($5 one-time per platform).
 5. Copy the Application Token
 6. Paste both keys into extension settings
 7. Set minimum priority threshold (recommended: High)
-8. Click "Test Pushover" to verify
+8. Click "📱 Test Pushover" to verify
 
-**Notification Features:**
+**Features:**
 - **Athlete name in title**: Quickly identify who posted (e.g., "⚡ Rebecca Jacobs")
 - **Activity stats in message**: Distance, speed/pace, elevation, PR badges
 - **Clickable links**: Tap notification to open activity directly on Strava
-- **Multi-line formatting**: Optimized for mobile readability
+- **Priority mapping**: Low/Medium → normal, High → high priority sound, Critical → emergency (requires acknowledgment)
 
-**Priority Levels:**
-- **Low**: All significant activities → Pushover priority 0 (normal)
-- **Medium**: Medium+ activities → Pushover priority 0 (normal)
-- **High** (recommended): High+ activities → Pushover priority 1 (high priority sound)
-- **Critical**: Only critical activities → Pushover priority 2 (emergency, requires acknowledgment)
+#### 🔗 Webhook Integrations
+
+Configure unlimited webhooks for services like Discord, Slack, Microsoft Teams, or custom endpoints. Each webhook can be individually named, configured, and tested.
+
+**Adding a Webhook:**
+1. Click "+ Add Webhook" in the Webhook Integrations section
+2. Enter a friendly name (e.g., "Personal Discord", "Work Slack")
+3. Choose format:
+   - **Discord**: Rich embeds with color coding (🔥 red for critical, ⚡ orange for high, ✨ yellow for medium, 🎯 blue for low)
+   - **Slack**: Formatted attachments with emoji indicators (:fire:, :zap:, :dart:)
+   - **Generic**: Simple JSON payload for custom integrations
+4. Paste webhook URL
+5. Set minimum priority threshold
+6. Click "Save Webhook"
+7. Test with the 🧪 button
+
+**Managing Webhooks:**
+- **Test (🧪)**: Send a test notification to verify configuration
+- **Edit (✏️)**: Modify name, URL, format, or priority
+- **Delete (🗑️)**: Remove webhook
+
+**Getting Webhook URLs:**
+
+**Discord:**
+1. Open server settings → Integrations → Webhooks
+2. Click "New Webhook"
+3. Copy webhook URL
+
+**Slack:**
+1. Create Incoming Webhook app in your workspace
+2. Choose channel to post to
+3. Copy webhook URL
+
+**Generic/Custom:**
+- Any endpoint that accepts POST requests with JSON
+- Perfect for: IFTTT, Zapier, n8n, Home Assistant, custom servers
+
+**Generic Webhook Payload Format:**
+```json
+{
+  "title": "Activity Title",
+  "message": "John Doe completed Morning Ride: 52.3 mi, 1,234 ft",
+  "priority": "high",
+  "activityId": "12345678",
+  "activityUrl": "https://www.strava.com/activities/12345678",
+  "timestamp": "2024-01-01T12:00:00.000Z"
+}
+```
+
+#### Priority Thresholds
+
+Each provider can filter notifications by minimum priority:
+- **Low**: Receive all significant activities
+- **Medium**: Only medium, high, and critical activities
+- **High**: Only high and critical activities
+- **Critical**: Only critical activities
+
+**Example Multi-Webhook Configuration:**
+- Webhook 1: "Personal Discord" - Discord format, Low priority (see everything)
+- Webhook 2: "Work Slack" - Slack format, High priority (only impressive activities)
+- Webhook 3: "Home Assistant" - Generic format, Medium priority (log notable activities)
+- Pushover: High priority (only phone notifications for impressive stuff)
 
 ### Auto-Refresh Settings
 
@@ -274,12 +337,20 @@ Activity Posted → Feed Monitor Detects → Parse Details → Evaluate Rules
                                     Auto-Kudos                        Notifications
                                     (if enabled)                      (if enabled)
                                           ↓                                   ↓
-                                    Give Kudos                    ┌───────────┴──────────┐
-                                                                  ↓                      ↓
-                                                           Pushover (Phone)      Review Queue
-                                                                                         ↓
-                                                                                  Store for Batch
-                                                                                     Review
+                                    Give Kudos              Check Each Provider's Min Priority
+                                                                              ↓
+                                          ┌───────────────────────────────────┼─────────────┐
+                                          ↓                ↓                  ↓             ↓
+                                     Pushover          Discord            Slack      Generic Webhook
+                                    (if meets         (if meets         (if meets     (if meets
+                                     threshold)        threshold)        threshold)    threshold)
+                                          ↓                ↓                  ↓             ↓
+                                          └────────────────┴──────────────────┴─────────────┘
+                                                                  ↓
+                                                           Review Queue
+                                                                  ↓
+                                                           Store for Batch
+                                                              Review
 ```
 
 ## Technical Details
@@ -311,6 +382,9 @@ Activity Posted → Feed Monitor Detects → Parse Details → Evaluate Rules
 | `alarms` | Schedule periodic tasks (cleanup, auto-refresh) |
 | `https://www.strava.com/*` | Access Strava dashboard and give kudos |
 | `https://api.pushover.net/*` | Send push notifications via Pushover |
+| `https://discord.com/*` | Send notifications to Discord webhooks |
+| `https://hooks.slack.com/*` | Send notifications to Slack webhooks |
+| `<all_urls>` | Send notifications to generic webhook URLs (only to configured endpoints) |
 
 ### Data Storage
 
@@ -323,7 +397,11 @@ All data is stored locally using Chrome's `chrome.storage.local` API:
 - Statistics and usage metrics
 
 **No data is sent to external servers** except:
-- Pushover API (only if enabled and configured for notifications)
+- Configured notification providers (only if enabled):
+  - Pushover API (push notifications to mobile)
+  - Discord webhooks (if configured)
+  - Slack webhooks (if configured)
+  - Custom webhook URLs (if configured)
 - Strava.com (to give kudos and fetch activity data)
 
 **Privacy:**
@@ -374,29 +452,44 @@ All data is stored locally using Chrome's `chrome.storage.local` API:
 
 **Common causes:**
 1. Notifications disabled in extension settings
-2. Pushover not configured or disabled
+2. No notification providers enabled or configured
 3. Activities don't match your notification rules
-4. Notification priority below Pushover minimum threshold
-5. Pushover credentials invalid
+4. Notification priority below provider's minimum threshold
+5. Provider credentials/webhook URLs invalid
 
 **Debug steps:**
-1. Verify Pushover is enabled and configured correctly
-2. Click "Test Pushover" button in settings
+1. Verify at least one provider is enabled and configured correctly
+2. Click the "Test" button for each enabled provider
 3. Test with "Everything" preset to see if rules are the issue
 4. Review console logs for `[RuleEngine]` messages showing rule evaluation
 5. Check if activities are being detected (`[Feed Monitor]` logs)
+6. Check service worker logs (chrome://extensions/ → Service Worker link) for `[Service Worker]` messages
 
-### Pushover Not Working
+### Provider Not Working
 
-**Checklist:**
-- [ ] Pushover is enabled in settings
+**General Checklist:**
+- [ ] Provider is enabled in settings
+- [ ] Configuration is correct (credentials/webhook URL)
+- [ ] Activity priority meets provider's minimum threshold
+- [ ] Click "Test" button to verify connection
+- [ ] Check service worker console for error messages
+
+**Pushover Specific:**
 - [ ] User Key is correct (30 characters)
 - [ ] App Token is correct (30 characters)
-- [ ] Activity priority meets minimum threshold
 - [ ] You have the Pushover app installed on your phone
-- [ ] Click "Test Pushover" button to verify connection
 
-**Test notification:** Click the test button in settings. You should see a test notification on your phone within seconds.
+**Discord/Slack Specific:**
+- [ ] Webhook URL is valid and starts with correct domain
+- [ ] Webhook hasn't been deleted from server/workspace settings
+- [ ] Bot/webhook has permission to post in the channel
+
+**Generic Webhook Specific:**
+- [ ] Your endpoint is accessible and accepting POST/PUT/PATCH requests
+- [ ] Your endpoint accepts JSON with Content-Type: application/json
+- [ ] Check your endpoint's logs for incoming requests
+
+**Test notifications:** Click the test button for each provider in settings. You should see a test notification within seconds.
 
 ### Activities Being Processed Multiple Times
 
@@ -470,7 +563,7 @@ strava-extension/
 ### v1.0.0 - Current Release
 **Core Features:**
 - ✅ Auto-kudos functionality with rate limiting
-- ✅ Pushover integration with clickable activity links
+- ✅ Multi-provider notifications (Pushover, Discord, Slack, Generic Webhook)
 - ✅ Custom rules engine with priority system
 - ✅ VIP athletes (guaranteed notifications for all activity types)
 - ✅ Auto-refresh dashboard
@@ -478,14 +571,16 @@ strava-extension/
 - ✅ Preset templates with detailed rule information
 
 **Recent Enhancements:**
+- ✅ **Multi-provider notification system** with per-provider priority thresholds
+- ✅ **Discord integration** with rich embeds and color coding
+- ✅ **Slack integration** with formatted attachments
+- ✅ **Generic webhook support** for custom integrations (IFTTT, Zapier, n8n, etc.)
 - ✅ Review Queue for batch activity review
 - ✅ Comment count condition for notification rules
 - ✅ Virtual ride detection (Zwift, Rouvy, etc.)
 - ✅ Group activity support with multiple participant parsing
-- ✅ Enhanced Pushover notifications (athlete names, stats, links)
 - ✅ Select all functionality in Review Queue
 - ✅ Export queue to markdown
-- ✅ Improved activity title parsing
 - ✅ VIP matching by ID or name
 
 ## Known Limitations
@@ -500,7 +595,7 @@ strava-extension/
 
 Potential features for future versions:
 - [ ] Activity comments automation with templates
-- [ ] More notification channels (Slack, Discord, Email, Telegram)
+- [ ] Additional notification channels (Email, Telegram, Microsoft Teams)
 - [ ] Weekly/monthly digest reports and analytics
 - [ ] Export statistics to CSV
 - [ ] Club activity monitoring
@@ -509,6 +604,7 @@ Potential features for future versions:
 - [ ] Multi-kudos for group activities (all participants at once)
 - [ ] Integration with training platforms (TrainingPeaks, etc.)
 - [ ] Custom notification sounds per priority level
+- [ ] Notification templates with customizable variables
 
 ## FAQ
 
@@ -519,10 +615,17 @@ A: Yes. The extension only accesses Strava pages you visit and stores data local
 A: The extension mimics human behavior with delays and rate limits. Use reasonable settings (don't kudos 500 activities per day).
 
 **Q: Do I need Pushover?**
-A: Yes, if you want notifications. The extension uses Pushover for push notifications to your phone. Desktop browser notifications have been removed in favor of the superior mobile experience.
+A: No, Pushover is just one of four notification options. You can use Discord webhooks (free), Slack webhooks (free), or a generic webhook to any custom endpoint. Pushover is recommended if you want mobile push notifications ($5 one-time).
 
-**Q: Can I get notifications without Pushover?**
-A: Not currently. However, the Review Queue feature can serve as an alternative - it collects significant activities for you to review in batch without notifications.
+**Q: Can I get notifications without paying for anything?**
+A: Yes! Discord and Slack webhooks are completely free. Just create a webhook in your Discord server or Slack workspace and paste the URL into the extension settings.
+
+**Q: Can I use multiple webhooks at once?**
+A: Absolutely! You can add unlimited webhooks. For example:
+- "Personal Discord" (low threshold) - see everything
+- "Work Slack" (high threshold) - only impressive activities
+- "Home Assistant" (medium threshold) - log notable activities
+- Pushover (high threshold) - phone notifications for impressive stuff
 
 **Q: Can I use this on Firefox or Safari?**
 A: Not yet. Currently Chrome/Edge only (Manifest V3). Firefox support may come in future.
@@ -567,6 +670,8 @@ Built with ❤️ for the Strava community.
 - Chrome Notifications API
 - Chrome Alarms API
 - Pushover API
+- Discord Webhooks API
+- Slack Incoming Webhooks API
 
 ---
 

@@ -73,11 +73,17 @@
         </div>
       </section>
 
-      <!-- Pushover Settings -->
+      <!-- Notification Providers -->
       <section class="card">
-        <h2>📱 Pushover Push Notifications</h2>
+        <h2>🔗 Notification Providers</h2>
+        <p class="section-description">Configure one or more notification providers. Each provider can have its own priority threshold.</p>
+      </section>
+
+      <!-- Pushover Settings -->
+      <section class="card provider-card">
+        <h3>📱 Pushover</h3>
         <p class="section-description">Send push notifications to your phone via Pushover ($5 one-time per platform). <a href="https://pushover.net" target="_blank">Get Pushover →</a></p>
-        
+
         <div class="setting-item">
           <div class="setting-info">
             <label for="pushoverEnabled">Enable Pushover</label>
@@ -108,8 +114,8 @@
 
           <div class="setting-item">
             <div class="setting-info">
-              <label for="pushoverMinPriority">Minimum Priority for Push</label>
-              <p class="description">Only send push notifications for activities at or above this priority</p>
+              <label for="pushoverMinPriority">Minimum Priority</label>
+              <p class="description">Only send notifications for activities at or above this priority</p>
             </div>
             <select id="pushoverMinPriority" class="select-input">
               <option value="low">Low (all notifications)</option>
@@ -122,6 +128,18 @@
           <button id="testPushoverBtn" class="btn btn-secondary">📱 Test Pushover</button>
           <span id="pushoverTestResult" class="test-result"></span>
         </div>
+      </section>
+
+      <!-- Webhook Integrations -->
+      <section class="card provider-card">
+        <h3>🔗 Webhook Integrations</h3>
+        <p class="section-description">Configure webhooks for services like Discord, Slack, Microsoft Teams, or custom endpoints. <a href="https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks" target="_blank">Discord</a> | <a href="https://api.slack.com/messaging/webhooks" target="_blank">Slack</a></p>
+
+        <div id="webhooksList" class="webhooks-list">
+          <!-- Webhooks will be added dynamically -->
+        </div>
+
+        <button id="addWebhookBtn" class="btn btn-primary">+ Add Webhook</button>
       </section>
 
       <!-- Auto-Refresh Settings -->
@@ -224,6 +242,60 @@
       <button id="saveBtn" class="btn btn-primary btn-large">💾 Save Settings</button>
       <p class="save-status" id="saveStatus"></p>
     </footer>
+  </div>
+
+  <!-- Webhook Configuration Modal -->
+  <div id="webhookModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Add Webhook</h3>
+        <span class="close">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Webhook Name</label>
+          <input type="text" id="webhookName" class="text-input" placeholder="e.g., My Discord Server, Work Slack">
+          <p class="description">A friendly name to identify this webhook</p>
+        </div>
+
+        <div class="form-group">
+          <label>Format</label>
+          <select id="webhookFormat" class="select-input">
+            <option value="discord">Discord (rich embed with colors)</option>
+            <option value="slack">Slack (formatted attachment)</option>
+            <option value="generic">Generic (simple JSON payload)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Webhook URL</label>
+          <input type="text" id="webhookUrl" class="text-input" placeholder="https://...">
+        </div>
+
+        <div class="form-group" id="webhookMethodGroup" style="display: none;">
+          <label>HTTP Method</label>
+          <select id="webhookMethod" class="select-input">
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="PATCH">PATCH</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Minimum Priority</label>
+          <select id="webhookMinPriority" class="select-input">
+            <option value="low">Low (all notifications)</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical only</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="cancelWebhookBtn" class="btn btn-secondary">Cancel</button>
+        <button id="saveWebhookBtn" class="btn btn-primary">Save Webhook</button>
+      </div>
+    </div>
   </div>
 
   <!-- Rule Builder Modal -->

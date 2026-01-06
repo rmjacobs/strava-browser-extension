@@ -12,11 +12,14 @@ const StorageManager = {
       enabled: true,
       preset: 'impressive-efforts', // 'prs-only', 'impressive-efforts', 'epic-adventures', 'everything'
       customRules: [],
-      pushover: {
-        enabled: false,
-        userKey: '',
-        appToken: '',
-        minPriority: 'high' // 'critical', 'high', 'medium', 'low'
+      providers: {
+        pushover: {
+          enabled: false,
+          minPriority: 'high', // 'critical', 'high', 'medium', 'low'
+          userKey: '',
+          appToken: ''
+        },
+        webhooks: [] // Array of webhook configurations: { id, name, enabled, url, minPriority, format }
       }
     },
     autoRefresh: {
@@ -84,9 +87,112 @@ const StorageManager = {
     });
   },
 
+  // Generate unique ID for webhooks
+  generateWebhookId() {
+    return 'webhook_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  },
+
+  // Migrate old notification settings to new provider structure
+  async migrateNotificationSettings(settings) {
+    let migrated = false;
+
+    // Migration 1: Old pushover structure (not nested under providers)
+    if (settings.notifications && settings.notifications.pushover &&
+        !settings.notifications.providers) {
+      console.log('[StorageManager] Migrating old Pushover settings to new provider structure');
+
+      const oldPushover = settings.notifications.pushover;
+
+      // Create new providers structure with migrated Pushover config
+      settings.notifications.providers = {
+        pushover: {
+          enabled: oldPushover.enabled || false,
+          minPriority: oldPushover.minPriority || 'high',
+          userKey: oldPushover.userKey || '',
+          appToken: oldPushover.appToken || ''
+        },
+        webhooks: []
+      };
+
+      // Remove old pushover key
+      delete settings.notifications.pushover;
+      migrated = true;
+    }
+
+    // Migration 2: Separate discord/slack/genericWebhook to webhooks array
+    if (settings.notifications && settings.notifications.providers) {
+      const providers = settings.notifications.providers;
+
+      // Check if we have old separate webhook providers
+      if (providers.discord || providers.slack || providers.genericWebhook) {
+        console.log('[StorageManager] Migrating webhook providers to unified webhooks array');
+
+        if (!providers.webhooks) {
+          providers.webhooks = [];
+        }
+
+        // Migrate Discord
+        if (providers.discord && providers.discord.webhookUrl) {
+          providers.webhooks.push({
+            id: this.generateWebhookId(),
+            name: 'Discord',
+            enabled: providers.discord.enabled || false,
+            url: providers.discord.webhookUrl,
+            minPriority: providers.discord.minPriority || 'medium',
+            format: 'discord'
+          });
+          delete providers.discord;
+        }
+
+        // Migrate Slack
+        if (providers.slack && providers.slack.webhookUrl) {
+          providers.webhooks.push({
+            id: this.generateWebhookId(),
+            name: 'Slack',
+            enabled: providers.slack.enabled || false,
+            url: providers.slack.webhookUrl,
+            minPriority: providers.slack.minPriority || 'medium',
+            format: 'slack'
+          });
+          delete providers.slack;
+        }
+
+        // Migrate Generic Webhook
+        if (providers.genericWebhook && providers.genericWebhook.url) {
+          providers.webhooks.push({
+            id: this.generateWebhookId(),
+            name: 'Generic Webhook',
+            enabled: providers.genericWebhook.enabled || false,
+            url: providers.genericWebhook.url,
+            minPriority: providers.genericWebhook.minPriority || 'low',
+            format: 'generic',
+            method: providers.genericWebhook.method || 'POST',
+            headers: providers.genericWebhook.headers || { 'Content-Type': 'application/json' }
+          });
+          delete providers.genericWebhook;
+        }
+
+        migrated = true;
+      }
+    }
+
+    // Save migrated settings if any changes were made
+    if (migrated) {
+      await this.set({ settings });
+      console.log('[StorageManager] Migration complete');
+    }
+
+    return settings;
+  },
+
   async getSettings() {
     const data = await this.get('settings');
-    return data.settings || this.DEFAULT_SETTINGS;
+    let settings = data.settings || this.DEFAULT_SETTINGS;
+
+    // Run migration if needed
+    settings = await this.migrateNotificationSettings(settings);
+
+    return settings;
   },
 
   async updateSettings(updates) {
