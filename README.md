@@ -9,6 +9,7 @@ A Chrome browser extension that automatically gives kudos to activities from ath
 - ⭐ VIP athlete tracking (get notified for ALL their activities)
 - 🎨 Flexible rule engine with presets
 - 📊 Activity stats and analytics
+- 💾 Export/Import settings for easy backup and migration
 
 ## Features
 
@@ -42,6 +43,12 @@ A Chrome browser extension that automatically gives kudos to activities from ath
 - **Automatic dashboard refresh**: Configurable interval (1-60 minutes)
 - **Background monitoring**: Extension checks for new activities even when tab is not active
 - **Seamless updates**: Feed updates without interrupting your browsing
+
+### 💾 Backup & Restore
+- **Export settings**: Download all your settings to a JSON file for backup
+- **Import settings**: Restore settings from a previously exported file
+- **Easy migration**: Transfer settings between browsers or after reinstalling
+- **Timestamped backups**: Export files are automatically dated for version control
 
 ### ⚙️ Flexible Configuration
 - **Notification presets**:

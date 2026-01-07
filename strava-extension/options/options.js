@@ -416,6 +416,13 @@ function setupEventListeners() {
   // Auto-refresh toggle
   document.getElementById('autoRefreshEnabled').addEventListener('change', toggleAutoRefreshSettings);
 
+  // Export/Import settings
+  document.getElementById('exportBtn').addEventListener('click', exportSettings);
+  document.getElementById('importBtn').addEventListener('click', () => {
+    document.getElementById('importFile').click();
+  });
+  document.getElementById('importFile').addEventListener('change', importSettings);
+
   // Rule modal
   setupRuleModal();
 
@@ -976,6 +983,82 @@ async function resetStats() {
   updateStats();
   
   alert('Statistics have been reset.');
+}
+
+// Export settings to JSON file
+async function exportSettings() {
+  try {
+    // Get all settings from storage
+    const data = await chrome.storage.local.get('settings');
+    const settings = data.settings || {};
+
+    // Create a blob with formatted JSON
+    const json = JSON.stringify(settings, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+
+    // Create download link
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `strava-extension-settings-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    const status = document.getElementById('saveStatus');
+    status.textContent = '✅ Settings exported successfully!';
+    status.style.color = '#28a745';
+    setTimeout(() => { status.textContent = ''; }, 3000);
+  } catch (error) {
+    console.error('Export error:', error);
+    const status = document.getElementById('saveStatus');
+    status.textContent = '❌ Failed to export settings: ' + error.message;
+    status.style.color = '#dc3545';
+    setTimeout(() => { status.textContent = ''; }, 3000);
+  }
+}
+
+// Import settings from JSON file
+async function importSettings(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const importedSettings = JSON.parse(text);
+
+    // Validate that it looks like valid settings
+    if (typeof importedSettings !== 'object') {
+      throw new Error('Invalid settings file format');
+    }
+
+    // Confirm with user
+    if (!confirm('This will overwrite your current settings. Are you sure you want to continue?')) {
+      event.target.value = ''; // Reset file input
+      return;
+    }
+
+    // Save imported settings
+    await chrome.storage.local.set({ settings: importedSettings });
+
+    const status = document.getElementById('saveStatus');
+    status.textContent = '✅ Settings imported successfully! Reloading...';
+    status.style.color = '#28a745';
+
+    // Reload the page to show new settings
+    setTimeout(() => {
+      location.reload();
+    }, 1000);
+
+  } catch (error) {
+    console.error('Import error:', error);
+    const status = document.getElementById('saveStatus');
+    status.textContent = '❌ Failed to import settings: ' + error.message;
+    status.style.color = '#dc3545';
+    setTimeout(() => { status.textContent = ''; }, 3000);
+    event.target.value = ''; // Reset file input
+  }
 }
 
 function togglePushoverSettings() {

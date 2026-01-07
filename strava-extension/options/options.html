@@ -236,6 +236,30 @@
         
         <button id="resetStatsBtn" class="btn btn-danger">Reset Statistics</button>
       </section>
+      <!-- Import/Export Settings -->
+      <section class="card">
+        <h2>💾 Backup & Restore</h2>
+        <p class="section-description">Export your settings to a file for backup, or import previously saved settings.</p>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <label>Export Settings</label>
+            <p class="description">Download all your settings as a JSON file</p>
+          </div>
+          <button id="exportBtn" class="btn btn-primary">📥 Export</button>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <label>Import Settings</label>
+            <p class="description">Load settings from a previously exported file</p>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="file" id="importFile" accept=".json" style="display: none;">
+            <button id="importBtn" class="btn btn-secondary">📤 Import</button>
+          </div>
+        </div>
+      </section>
     </main>
 
     <footer>
