@@ -28,6 +28,7 @@ const StorageManager = {
     },
     vipAthletes: [], // Athletes with special notification rules
     reviewQueue: [], // Activities queued for review/commenting
+    dismissedReviewQueueItems: [], // Track dismissed review queue items { activityId, timestamp }
     processedActivities: [], // Track kudos'd activities (limit to last 1000)
     stats: {
       totalKudos: 0,
@@ -264,6 +265,18 @@ const StorageManager = {
     if (!settings.reviewQueue) {
       settings.reviewQueue = [];
     }
+    if (!settings.dismissedReviewQueueItems) {
+      settings.dismissedReviewQueueItems = [];
+    }
+
+    // Check if activity was previously dismissed
+    const isDismissed = settings.dismissedReviewQueueItems.some(
+      item => item.activityId === activity.id
+    );
+    if (isDismissed) {
+      console.log('[StorageManager] Activity', activity.id, 'was dismissed, skipping');
+      return;
+    }
 
     // Check if activity already in queue
     const exists = settings.reviewQueue.some(item => item.activityId === activity.id);
@@ -297,7 +310,24 @@ const StorageManager = {
 
   async getReviewQueue() {
     const settings = await this.getSettings();
-    return settings.reviewQueue || [];
+    const queue = settings.reviewQueue || [];
+
+    // Filter out items older than 14 days (time-based cleanup)
+    const fourteenDaysAgo = Date.now() - (14 * 24 * 60 * 60 * 1000);
+    const filtered = queue.filter(item => {
+      // Keep items without addedAt timestamp (backwards compatibility)
+      if (!item.addedAt) return true;
+      return item.addedAt > fourteenDaysAgo;
+    });
+
+    // If we filtered out old items, update storage
+    if (filtered.length !== queue.length) {
+      settings.reviewQueue = filtered;
+      await this.set({ settings });
+      console.log('[StorageManager] Removed', queue.length - filtered.length, 'old items from review queue');
+    }
+
+    return filtered;
   },
 
   async markReviewQueueItem(activityId, reviewed) {
@@ -315,8 +345,59 @@ const StorageManager = {
     const settings = await this.getSettings();
     if (!settings.reviewQueue) return;
 
+    if (!settings.dismissedReviewQueueItems) {
+      settings.dismissedReviewQueueItems = [];
+    }
+
+    // Add reviewed items to dismissed list before removing them
+    const reviewedItems = settings.reviewQueue.filter(item => item.reviewed);
+    const timestamp = Date.now();
+
+    reviewedItems.forEach(item => {
+      // Only add if not already in dismissed list
+      const alreadyDismissed = settings.dismissedReviewQueueItems.some(
+        d => d.activityId === item.activityId
+      );
+      if (!alreadyDismissed) {
+        settings.dismissedReviewQueueItems.push({
+          activityId: item.activityId,
+          timestamp: timestamp
+        });
+      }
+    });
+
+    console.log('[StorageManager] Added', reviewedItems.length, 'items to dismissed list');
+
+    // Remove reviewed items from queue
     settings.reviewQueue = settings.reviewQueue.filter(item => !item.reviewed);
+
+    // Clean up old dismissed items (older than 30 days)
+    await this.cleanupDismissedItems(settings);
+
     await this.set({ settings });
+  },
+
+  // Clean up dismissed items older than 30 days
+  async cleanupDismissedItems(settings = null) {
+    if (!settings) {
+      settings = await this.getSettings();
+    }
+
+    if (!settings.dismissedReviewQueueItems) return settings;
+
+    const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+    const before = settings.dismissedReviewQueueItems.length;
+
+    settings.dismissedReviewQueueItems = settings.dismissedReviewQueueItems.filter(
+      item => item.timestamp > thirtyDaysAgo
+    );
+
+    const removed = before - settings.dismissedReviewQueueItems.length;
+    if (removed > 0) {
+      console.log('[StorageManager] Cleaned up', removed, 'old dismissed items');
+    }
+
+    return settings;
   },
 
   async getReviewQueueCount() {
