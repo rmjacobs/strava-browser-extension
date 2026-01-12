@@ -157,13 +157,23 @@ const RuleEngine = {
   },
 
   normalizeDistance(distance, targetUnit) {
+    // First convert everything to miles
     let miles = distance.value;
     if (distance.unit === 'km') {
       miles = miles * 0.621371;
+    } else if (distance.unit === 'meters') {
+      miles = miles * 0.000621371;
+    } else if (distance.unit === 'yards') {
+      miles = miles * 0.000568182;
     }
-    
+
+    // Then convert to target unit if needed
     if (targetUnit === 'km') {
       return miles / 0.621371;
+    } else if (targetUnit === 'meters') {
+      return miles / 0.000621371;
+    } else if (targetUnit === 'yards') {
+      return miles / 0.000568182;
     }
     return miles;
   },

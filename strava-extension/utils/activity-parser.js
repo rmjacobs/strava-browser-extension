@@ -177,16 +177,29 @@ const ActivityParser = {
     const stats = element.querySelectorAll('li, .stat, [class*="stats"]');
     for (const stat of stats) {
       const text = stat.textContent;
-      
-      // Match patterns like "50.2 mi", "80.5 km"
-      const miMatch = text.match(/([\d,.]+)\s*mi/i);
+
+      // Match patterns like "50.2 mi", "80.5 km", "1125 yd", "1500 m"
+      // Use word boundaries to avoid matching "6min" as "mi"
+      const miMatch = text.match(/([\d,.]+)\s*mi(?:\s|$|les)/i);
       if (miMatch) {
         return { value: parseFloat(miMatch[1].replace(',', '')), unit: 'miles' };
       }
-      
-      const kmMatch = text.match(/([\d,.]+)\s*km/i);
+
+      const kmMatch = text.match(/([\d,.]+)\s*km(?:\s|$)/i);
       if (kmMatch) {
         return { value: parseFloat(kmMatch[1].replace(',', '')), unit: 'km' };
+      }
+
+      // Swimming: yards
+      const ydMatch = text.match(/([\d,.]+)\s*(?:yd|yds|yards?)(?:\s|$)/i);
+      if (ydMatch) {
+        return { value: parseFloat(ydMatch[1].replace(',', '')), unit: 'yards' };
+      }
+
+      // Swimming: meters (be careful - only match when followed by space/end)
+      const mMatch = text.match(/([\d,.]+)\s*m(?:\s|$)(?!i)/i);
+      if (mMatch) {
+        return { value: parseFloat(mMatch[1].replace(',', '')), unit: 'meters' };
       }
     }
     return null;
@@ -281,29 +294,39 @@ const ActivityParser = {
     return 0;
   },
 
+  convertDistanceToMiles(distance) {
+    // Convert any distance unit to miles
+    let miles = distance.value;
+
+    if (distance.unit === 'km') {
+      miles = miles * 0.621371;
+    } else if (distance.unit === 'meters') {
+      miles = miles * 0.000621371;
+    } else if (distance.unit === 'yards') {
+      miles = miles * 0.000568182;
+    }
+    // else distance.unit is already 'miles'
+
+    return miles;
+  },
+
   calculateSpeed(activity) {
     if (!activity.distance || !activity.movingTime) return null;
-    
+
     // Convert to mph
     const hours = activity.movingTime / 3600;
-    let miles = activity.distance.value;
-    if (activity.distance.unit === 'km') {
-      miles = miles * 0.621371;
-    }
-    
+    const miles = this.convertDistanceToMiles(activity.distance);
+
     return { value: miles / hours, unit: 'mph' };
   },
 
   calculatePace(activity) {
     if (!activity.distance || !activity.movingTime) return null;
-    
+
     // Convert to min/mile
     const minutes = activity.movingTime / 60;
-    let miles = activity.distance.value;
-    if (activity.distance.unit === 'km') {
-      miles = miles * 0.621371;
-    }
-    
+    const miles = this.convertDistanceToMiles(activity.distance);
+
     return { value: minutes / miles, unit: 'min/mile' };
   },
 

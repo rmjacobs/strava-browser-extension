@@ -750,7 +750,7 @@ async function testGenericWebhookDirect(webhook, resultSpan) {
 
 function updateUnitOptions(condition, unitSelect) {
   const units = {
-    distance: ['miles', 'km'],
+    distance: ['miles', 'km', 'yards', 'meters'],
     speed: ['mph', 'kph'],
     pace: ['min/mile', 'min/km'],
     elevation: ['feet', 'meters'],
