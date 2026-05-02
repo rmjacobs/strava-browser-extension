@@ -99,6 +99,7 @@ const ActivityParser = {
       console.log('[ActivityParser] SVG title:', titleText);
 
       if (titleText === 'Virtual Ride') {
+        console.log('[ActivityParser] ✓ Virtual ride detected via SVG title');
         detectedType = 'VirtualRide';
         isVirtual = true;
       } else if (titleText.includes('Ride')) {
@@ -125,10 +126,12 @@ const ActivityParser = {
       else if (classList.includes('icon-walk') || classList.includes('Walk')) detectedType = 'Walk';
       else if (classList.includes('icon-hike') || classList.includes('Hike')) detectedType = 'Hike';
       else if (classList.includes('VirtualRide')) {
+        console.log('[ActivityParser] ✓ Virtual ride detected via class name "VirtualRide"');
         detectedType = 'VirtualRide';
         isVirtual = true;
       }
       else if (classList.includes('icon-virtualride')) {
+        console.log('[ActivityParser] ✓ Virtual ride detected via class name "icon-virtualride"');
         detectedType = 'VirtualRide';
         isVirtual = true;
       }
@@ -140,12 +143,16 @@ const ActivityParser = {
       const deviceElement = element.querySelector('[data-testid="device"]');
       if (deviceElement) {
         const device = deviceElement.textContent.trim().toLowerCase();
-        const virtualPlatforms = ['zwift', 'rouvy', 'trainerroad', 'trainer road', 'sufferfest', 'wahoo', 'bkool', 'fulgaz'];
+        // Note: Removed 'wahoo' as it matches Wahoo GPS devices (ELEMNT, BOLT, ROAM) used for outdoor riding
+        // Added 'wahoo systm' for Wahoo's actual indoor training platform
+        const virtualPlatforms = ['zwift', 'rouvy', 'trainerroad', 'trainer road', 'wahoo systm', 'systm', 'bkool', 'fulgaz'];
 
         if (virtualPlatforms.some(platform => device.includes(platform))) {
-          console.log('[ActivityParser] Virtual platform detected in device:', device);
+          console.log('[ActivityParser] ✓ Virtual platform detected in device:', device);
           detectedType = 'VirtualRide';
           isVirtual = true;
+        } else {
+          console.log('[ActivityParser] Device found but not virtual:', device);
         }
       }
 
@@ -153,7 +160,7 @@ const ActivityParser = {
       if (!isVirtual) {
         const virtualTag = element.querySelector('[data-testid="tag"]');
         if (virtualTag && virtualTag.textContent.trim().toLowerCase() === 'virtual') {
-          console.log('[ActivityParser] Virtual tag detected');
+          console.log('[ActivityParser] ✓ Virtual ride detected via "Virtual" tag');
           detectedType = 'VirtualRide';
           isVirtual = true;
         }
